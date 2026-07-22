@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { SERVICE_PORTS } from '@app/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(SERVICE_PORTS.API_GATEWAY);
 
-  console.log(`API Gateway is running on port ${process.env.port ?? 3001}`);
+  console.log(`API Gateway is running on port ${SERVICE_PORTS.API_GATEWAY}`);
 }
 bootstrap();
