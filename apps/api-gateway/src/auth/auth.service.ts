@@ -1,13 +1,16 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { SERVICE_PORTS } from '@app/common';
+import { ErrorHelper, SERVICE_PORTS } from '@app/common';
 
 @Injectable()
 export class AuthService {
   private readonly authServiceUrl = `http://localhost:${SERVICE_PORTS.AUTH_SERVICE}`;
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly errorHelper: ErrorHelper,
+  ) { }
 
   async register(data: { email: string; password: string; name: string }) {
     try {
@@ -16,7 +19,7 @@ export class AuthService {
       );
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      this.errorHelper.handle(error);
     }
   }
 
@@ -27,7 +30,7 @@ export class AuthService {
       );
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      this.errorHelper.handle(error);
     }
   }
 
@@ -35,19 +38,12 @@ export class AuthService {
     try {
       const response = await firstValueFrom(
         this.httpService.get(`${this.authServiceUrl}/profile`, {
-          headers: { Authorization: token}
+          headers: { Authorization: token }
         }),
       );
       return response.data;
     } catch (error) {
-      this.handleError(error);
+      this.errorHelper.handle(error);
     }
-  }
-
-  private handleError(error: any): never {
-    if (error.response) {
-      throw new HttpException(error.response.data, error.response.status);
-    }
-    throw new HttpException('Someting weng wrong', 503);
   }
 }
