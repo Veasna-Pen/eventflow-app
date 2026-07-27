@@ -184,12 +184,12 @@ export class TicketsServiceService implements OnModuleInit {
     return { message: 'Ticket cancelled successfully' };
   }
 
-async checkIn(ticketCode: string, organizerId: string) {
+  async checkIn(ticketCode: string, organizerId: string) {
     const [ticket] = await this.dbService.db
       .select({
         id: tickets.id,
         status: tickets.status,
-        eventId: events.id,
+        eventId: tickets.eventId,
         quantity: tickets.quantity,
       })
       .from(tickets)
@@ -205,6 +205,10 @@ async checkIn(ticketCode: string, organizerId: string) {
       .from(events)
       .where(eq(events.id, ticket.eventId))
       .limit(1);
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
 
     if (event.organizerId !== organizerId) {
       throw new ForbiddenException(
