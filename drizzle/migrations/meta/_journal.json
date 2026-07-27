@@ -15,6 +15,13 @@
       "when": 1784789815113,
       "tag": "0001_outstanding_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785140077142,
+      "tag": "0002_striped_the_fury",
+      "breakpoints": true
     }
   ]
 }
