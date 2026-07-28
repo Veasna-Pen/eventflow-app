@@ -1,5 +1,5 @@
 import { PurchaseTicketDto } from '@app/common';
-import { DatabaseService, events, tickets } from '@app/database';
+import { DatabaseService, events, tickets, users } from '@app/database';
 import { KAFKA_SERVICE, KAFKA_TOPICS } from '@app/kafka';
 import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
@@ -39,6 +39,16 @@ export class TicketsServiceService implements OnModuleInit {
       throw new BadRequestException('Event is not published');
     }
 
+    const [user] = await this.dbService.db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const soldTickets = await this.dbService.db
       .select({ total: sql<number>`COALESCE(SUM(${tickets.quantity}), 0)` })
       .from(tickets)
@@ -71,6 +81,8 @@ export class TicketsServiceService implements OnModuleInit {
       ticketId: ticket.id,
       eventId: ticket.eventId,
       userId: ticket.userId,
+      email: user.email,
+      eventTitle: event.title,
       quantity: ticket.quantity,
       totalPrice: ticket.totalPrice,
       ticketCode: ticket.ticketCode,
@@ -168,6 +180,16 @@ export class TicketsServiceService implements OnModuleInit {
       throw new BadRequestException('Ticket is already checked in');
     }
 
+    const [user] = await this.dbService.db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const [cancelled] = await this.dbService.db
       .update(tickets)
       .set({ status: 'CANCELLED', updatedAt: new Date() })
@@ -178,6 +200,7 @@ export class TicketsServiceService implements OnModuleInit {
       ticketId: cancelled.id,
       eventId: cancelled.eventId,
       userId: cancelled.userId,
+      email: user.email,
       timestamp: new Date().toISOString(),
     });
 
